@@ -1,35 +1,47 @@
+// controllers/chatController.js
 const asyncHandler = require('express-async-handler');
-const Message = require('../models/Message');
+const Chat = require('../models/ChatMessage');
 const User = require('../models/User');
 
-const sendMessage = async (req, res) => {
-  const { sender, receiver, content } = req.body;
-
-  try {
-    const newMessage = new Message({ sender, receiver, content });
-    const savedMessage = await newMessage.save();
-
-    res.status(201).json(savedMessage);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-const getChats = async (req, res) => {
+// Fetch messages for a chat
+const getMessages = asyncHandler(async (req, res) => {
   const { userId } = req.params;
+  const admin = await User.findOne({ role: 'admin' });
 
-  try {
-    const messages = await Message.find({
-      $or: [
-        { sender: userId },
-        { receiver: userId }
-      ]
-    });
+  const chat = await Chat.findOne({ users: { $all: [req.user._id, userId] } })
+    .populate('users', 'name')
+    .populate('messages.sender', 'name');
 
-    res.json(messages);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  if (chat) {
+    res.json(chat.messages);
+  } else {
+    res.status(404);
+    throw new Error('Chat not found');
   }
-};
+});
 
-module.exports = { sendMessage, getChats };
+// Send a message
+const sendMessage = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { content } = req.body;
+
+  const admin = await User.findOne({ role: 'admin' });
+
+  let chat = await Chat.findOne({ users: { $all: [req.user._id, userId] } });
+
+  if (!chat) {
+    chat = new Chat({ users: [req.user._id, userId, admin._id] });
+  }
+
+  const newMessage = {
+    sender: req.user._id,
+    content,
+  };
+
+  chat.messages.push(newMessage);
+  await chat.save();
+
+  res.status(201).json(newMessage);
+});
+
+module.exports = { getMessages, sendMessage };

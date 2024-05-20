@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: '*',
+    origin: '*', // Allow any origin to connect, adjust as needed
     methods: ['GET', 'POST']
   }
 });
@@ -42,7 +42,7 @@ mongoose.connect(process.env.MONGO_URL, {
   .catch(err => console.log(err));
 
 // Routes
-const chatRoutes = require('./routes/chatRoutes')(io);
+const chatRoutes = require('./routes/chatRoutes');
 const quotationRoutes = require('./routes/quotations');
 const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -73,15 +73,10 @@ io.on('connection', (socket) => {
     socket.join(userId);
   });
 
-  socket.on('sendMessage', async (message) => {
+  socket.on('sendMessage', (message) => {
     const { sender, receiver, content } = message;
-
-    // Save message to database
-    // Example:
-    // const newMessage = new Message({ sender, receiver, content });
-    // await newMessage.save();
-
     io.to(receiver).emit('message', { sender, content });
+    // Save message to database
   });
 
   socket.on('disconnect', () => {
