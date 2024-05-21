@@ -9,14 +9,18 @@ require('dotenv').config();
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { protect, admin } = require('./middleware/authMiddleware');
 const PORT = process.env.PORT || 5000;
+const socketConfig = require('./socket');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: '*', // Allow any origin to connect, adjust as needed
-    methods: ['GET', 'POST']
-  }
+const io = socketConfig.init(server);
+
+io.on('connection', (socket) => {
+  console.log('Client connected');
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
 });
 
 // Middleware
@@ -66,23 +70,23 @@ app.use('/api/solarCalculations', solarCalculationRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-io.on('connection', (socket) => {
-  console.log('New WebSocket connection');
+// io.on('connection', (socket) => {
+//   console.log('New WebSocket connection');
 
-  socket.on('join', ({ userId }) => {
-    socket.join(userId);
-  });
+//   socket.on('join', ({ userId }) => {
+//     socket.join(userId);
+//   });
 
-  socket.on('sendMessage', (message) => {
-    const { sender, receiver, content } = message;
-    io.to(receiver).emit('message', { sender, content });
-    // Save message to database
-  });
+//   socket.on('sendMessage', (message) => {
+//     const { sender, receiver, content } = message;
+//     io.to(receiver).emit('message', { sender, content });
+//     // Save message to database
+//   });
 
-  socket.on('disconnect', () => {
-    console.log('WebSocket disconnected');
-  });
-});
+//   socket.on('disconnect', () => {
+//     console.log('WebSocket disconnected');
+//   });
+// });
 
 // Start Server
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

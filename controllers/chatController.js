@@ -1,12 +1,11 @@
-// controllers/chatController.js
 const asyncHandler = require('express-async-handler');
 const Chat = require('../models/ChatMessage');
 const User = require('../models/User');
+const io = require('../socket');
 
 // Fetch messages for a chat
 const getMessages = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const admin = await User.findOne({ role: 'admin' });
 
   const chat = await Chat.findOne({ users: { $all: [req.user._id, userId] } })
     .populate('users', 'name')
@@ -25,12 +24,10 @@ const sendMessage = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { content } = req.body;
 
-  const admin = await User.findOne({ role: 'admin' });
-
   let chat = await Chat.findOne({ users: { $all: [req.user._id, userId] } });
 
   if (!chat) {
-    chat = new Chat({ users: [req.user._id, userId, admin._id] });
+    chat = new Chat({ users: [req.user._id, userId] });
   }
 
   const newMessage = {
@@ -41,7 +38,12 @@ const sendMessage = asyncHandler(async (req, res) => {
   chat.messages.push(newMessage);
   await chat.save();
 
-  res.status(201).json(newMessage);
+  const populatedMessage = await chat.populate('messages.sender', 'name').execPopulate();
+
+  const latestMessage = populatedMessage.messages[populatedMessage.messages.length - 1];
+  io.getIO().emit('message', latestMessage);
+
+  res.status(201).json(latestMessage);
 });
 
 module.exports = { getMessages, sendMessage };
