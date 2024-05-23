@@ -1,13 +1,8 @@
 const express = require('express');
-const chatController = require('../controllers/chatController');
+const { createContactMessage, getContactMessages } = require('../controllers/contactController');
+const router = express.Router();
 
-module.exports = (io) => {
-  const router = express.Router();
+router.post('/', createContactMessage);
+router.get('/', getContactMessages);
 
-  router.get('/', chatController.getMessages);
-  router.post('/', chatController.addMessage);
-
-  // Setup any additional routes if needed
-
-  return router;
-};
+module.exports = router;

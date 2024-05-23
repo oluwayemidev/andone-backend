@@ -1,23 +1,28 @@
-// controllers/contactController.js
-const Contact = require('../models/Contact');
+const Contact = require('../models/contactModel');
 
-// Get all contacts
-exports.getAllContacts = async (req, res) => {
+// Create a contact message
+const createContactMessage = async (req, res) => {
   try {
-    const contacts = await Contact.find();
-    res.json(contacts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const { name, email, subject, message } = req.body;
+    const contactMessage = new Contact({ name, email, subject, message });
+    await contactMessage.save();
+    res.status(201).json({ message: 'Contact message created successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Create new contact
-exports.createContact = async (req, res) => {
-  const contact = new Contact(req.body);
+// Get all contact messages
+const getContactMessages = async (req, res) => {
   try {
-    const newContact = await contact.save();
-    res.status(201).json(newContact);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    const messages = await Contact.find();
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
+};
+
+module.exports = {
+  createContactMessage,
+  getContactMessages,
 };

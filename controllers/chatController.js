@@ -38,9 +38,12 @@ const sendMessage = asyncHandler(async (req, res) => {
   chat.messages.push(newMessage);
   await chat.save();
 
-  const populatedMessage = await chat.populate('messages.sender', 'name').execPopulate();
+  const populatedChat = await Chat.populate(chat, {
+    path: 'messages.sender',
+    select: 'name',
+  });
 
-  const latestMessage = populatedMessage.messages[populatedMessage.messages.length - 1];
+  const latestMessage = populatedChat.messages[populatedChat.messages.length - 1];
   io.getIO().emit('message', latestMessage);
 
   res.status(201).json(latestMessage);
