@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.e29f7782.css",
-    "main.js": "/static/js/main.ee3ca65c.js",
+    "main.js": "/static/js/main.37750ea1.js",
     "static/media/vid.mp4": "/static/media/vid.781c490643fc6ae41510.mp4",
     "static/media/0430_6.mov": "/static/media/0430_6.563e903900418b67c6df.mov",
     "static/media/0430_7.mov": "/static/media/0430_7.10405224dd8ec2caefb3.mov",
@@ -35,16 +35,17 @@
     "static/media/expertSupport.jpg": "/static/media/expertSupport.0580f0e8e14de0c055e6.jpg",
     "static/media/exceptionalQuality.jpg": "/static/media/exceptionalQuality.01d15f9f01781f7887cc.jpg",
     "static/media/innovativeTechnology.jpg": "/static/media/innovativeTechnology.5baf197fe9093e4f4ead.jpg",
+    "static/media/director.jpg": "/static/media/director.54cf02c13b8a3ba2347e.jpg",
     "static/media/slick.svg": "/static/media/slick.2630a3e3eab21c607e21.svg",
     "static/media/slick.eot": "/static/media/slick.a4e97f5a2a64f0ab1323.eot",
     "static/media/slick.ttf": "/static/media/slick.c94f7671dcc99dce43e2.ttf",
     "static/media/slick.woff": "/static/media/slick.295183786cd8a1389865.woff",
     "index.html": "/index.html",
     "main.e29f7782.css.map": "/static/css/main.e29f7782.css.map",
-    "main.ee3ca65c.js.map": "/static/js/main.ee3ca65c.js.map"
+    "main.37750ea1.js.map": "/static/js/main.37750ea1.js.map"
   },
   "entrypoints": [
     "static/css/main.e29f7782.css",
-    "static/js/main.ee3ca65c.js"
+    "static/js/main.37750ea1.js"
   ]
 }
