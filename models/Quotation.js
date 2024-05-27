@@ -14,6 +14,10 @@ const QuotationSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  location: {
+    type: String,
+    required: true,
+  },
   product: {
     type: String,
     required: true,

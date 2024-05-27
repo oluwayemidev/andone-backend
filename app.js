@@ -1,31 +1,24 @@
 const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const mongoose = require('mongoose');
+const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path');
-const bodyParser = require('body-parser');
 require('dotenv').config();
-const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-const { protect, admin } = require('./middleware/authMiddleware');
-const PORT = process.env.PORT || 5000;
-const socketConfig = require('./socket');
+const authRoutes = require('./routes/authRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
+connectDB();
 const app = express();
-const server = http.createServer(app);
-const io = socketConfig.init(server);
-
-io.on('connection', (socket) => {
-  console.log('Client connected');
-  
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: '*',
+    },
 });
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
 app.use(express.json());
 
 // Ensure upload directory exists
@@ -35,58 +28,48 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
+
+// Serve static files from the 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Static route for serving uploaded images
 app.use('/uploads', express.static(uploadDir));
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
-
 // Routes
-const chatRoutes = require('./routes/chatRoutes');
+// Make sure to place middleware before routes that require it
 const quotationRoutes = require('./routes/quotations');
 const productRoutes = require('./routes/productRoutes');
-const userRoutes = require('./routes/userRoutes');
-const adminRoutes = require('./routes/adminRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const solarCalculationRoutes = require('./routes/solarCalculation');
 
-app.use('/api/chat', protect, chatRoutes);
 app.use('/api/quotations', quotationRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/admin', protect, admin, adminRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/uploads', express.static(uploadDir));
 app.use('/api/solarCalculations', solarCalculationRoutes);
 
-app.use(notFound);
-app.use(errorHandler);
+app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
 
-// io.on('connection', (socket) => {
-//   console.log('New WebSocket connection');
+io.on('connection', (socket) => {
+  console.log('A user connected');
+  socket.on('disconnect', () => {
+      console.log('User disconnected');
+  });
+  socket.on('sendMessage', (message) => {
+      io.emit('message', message);
+  });
+});
 
-//   socket.on('join', ({ userId }) => {
-//     socket.join(userId);
-//   });
-
-//   socket.on('sendMessage', (message) => {
-//     const { sender, receiver, content } = message;
-//     io.to(receiver).emit('message', { sender, content });
-//     // Save message to database
-//   });
-
-//   socket.on('disconnect', () => {
-//     console.log('WebSocket disconnected');
-//   });
-// });
+// Catch-all route to serve index.html for SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Start Server
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 5000;
+httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));

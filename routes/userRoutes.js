@@ -1,10 +1,11 @@
 const express = require('express');
+const User = require('../models/User');
 const router = express.Router();
-const { registerUser, authUser, getUsers } = require('../controllers/userController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { authenticate, isAdmin } = require('../middleware/authMiddleware');
 
-router.get('/', protect, admin, getUsers);
-router.post('/login', authUser);
-router.post('/register', registerUser);
+router.get('/', async (req, res) => {
+  const users = await User.find().select('username role');
+  res.json(users);
+});
 
 module.exports = router;
